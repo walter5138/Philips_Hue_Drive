@@ -1,315 +1,182 @@
 #!/usr/bin/env python3
 
-
 import sys
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
-
-from hue_class import HueLamp
+from gi.repository import Gtk, Gdk, GdkPixbuf 
 from hue_config import lamp_dict
+from hue_class import HueLamp
 
 for a, n in lamp_dict.items():
     globals()[n] = HueLamp(a, n)
 
-class MainWindow(Gtk.Window):
+class MainWindow(Gtk.ApplicationWindow):
 
     def __init__(self, app):
-        Gtk.Window.__init__(self, title="Philips Hue Drive", application=app)
-        self.set_default_size(450, 230)
+        
+        Gtk.Window.__init__(self, title="Box Test", application=app)
+        #self.set_default_size(400, 400)
         self.set_border_width(10)
         self.set_position(Gtk.WindowPosition.MOUSE)
-        #self.maximize()
-
-        menubar = Gtk.MenuBar()
-        menubar.set_hexpand(True)
-
-        hue_admin_menuitem = Gtk.MenuItem(label="Hue Admin")
-        menubar.append(hue_admin_menuitem)
+        self.settings = Gtk.Settings.get_default()
+        self.settings.set_property("gtk-application-prefer-dark-theme", True)
         
-        menu = Gtk.Menu()
-        hue_admin_menuitem.set_submenu(menu)
+        self.hb = Gtk.HeaderBar()
+        self.hb.set_show_close_button(True)
+        self.hb.props.title = "Phlips Hue Drive"
+        self.set_titlebar(self.hb)
 
-        menuitem = Gtk.MenuItem(label="manage new Bulb")
-        menu.append(menuitem)
+        hue_button = Gtk.MenuButton()
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale("/home/walter/bluetooth/hue/hue_ble_gtk/bulb_icon.jpg", 40, 40, preserve_aspect_ratio=True)
+        image = Gtk.Image.new_from_pixbuf(pixbuf)
+        hue_button.add(image)
+        main_menu = Gtk.Menu()
+        hue_button.set_popup(main_menu)
+        self.hb.pack_start(hue_button)
+
+        admin_menu_item = Gtk.MenuItem(label="Hue Admin")
+        main_menu.append(admin_menu_item)
+
+        admin_submenu = Gtk.Menu()
+        admin_menu_item.set_submenu(admin_submenu)
+
+        menuitem = Gtk.MenuItem(label="import new Bulb")
+        admin_submenu.append(menuitem)
         menuitem = Gtk.MenuItem(label="show lamp_dict")
-        menu.append(menuitem)
+        admin_submenu.append(menuitem)
         menuitem = Gtk.MenuItem(label="set bulb name")
-        menu.append(menuitem)
+        admin_submenu.append(menuitem)
         menuitem = Gtk.MenuItem(label="transitiontime")
-        menu.append(menuitem)
-        self.quit_menuitem = Gtk.MenuItem(label="Quit")
-        self.quit_menuitem.connect('activate', self.quit_menuitem_selected)
-        menu.append(self.quit_menuitem)
+        admin_submenu.append(menuitem)
+        quit_menuitem = Gtk.MenuItem(label="Quit")
+        quit_menuitem.connect('activate', self.quit_menuitem_selected)
+        admin_submenu.append(quit_menuitem)
 
 
-        hue_fun_menuitem = Gtk.MenuItem(label="Hue Fun")
-        hue_fun_menuitem.set_tooltip_text("action-related")
-        menubar.append(hue_fun_menuitem)
+        fun_menu_item = Gtk.MenuItem(label="Hue Fun")
+        main_menu.append(fun_menu_item)
 
-        menu = Gtk.Menu()
-        hue_fun_menuitem.set_submenu(menu)
+        fun_submenu = Gtk.Menu()
+        fun_menu_item.set_submenu(fun_submenu)
 
-        alert_menuitem = Gtk.MenuItem(label="alert")
-        menu.append(alert_menuitem)
-        self.mir_menuitem = Gtk.MenuItem(label="mired")
-        self.mir_menuitem.connect('activate', self.mir_menuitem_selected)
-        menu.append(self.mir_menuitem)
-        self.bri_menuitem = Gtk.MenuItem(label="brightness")
-        self.bri_menuitem.connect('activate', self.bri_menuitem_selected)
-        menu.append(self.bri_menuitem)
-        menuitem = Gtk.MenuItem(label="color")
-        menu.append(menuitem)
+        menuitem = Gtk.MenuItem(label="pass")
+        fun_submenu.append(menuitem)
+        menuitem = Gtk.MenuItem(label="pass")
+        fun_submenu.append(menuitem)
+        menuitem = Gtk.MenuItem(label="pass")
+        fun_submenu.append(menuitem)
+        menuitem = Gtk.MenuItem(label="pass")
+        fun_submenu.append(menuitem)
+
+        main_menu.show_all()
         
-        menu = Gtk.Menu()
-        alert_menuitem.set_submenu(menu)
-
-        self.ping_menuitem = Gtk.MenuItem(label="ping")
-        self.ping_menuitem.connect("activate", self.ping_menuitem_selected)
-        menu.append(self.ping_menuitem)
-        self.blink_menuitem = Gtk.MenuItem(label="blink")
-        self.blink_menuitem.connect("activate", self.blink_menuitem_selected)
-        menu.append(self.blink_menuitem)
-        self.stop_blinking_menuitem = Gtk.MenuItem(label="stop blinking")
-        self.stop_blinking_menuitem.connect("activate", self.stop_blinking_menuitem_selected)
-        menu.append(self.stop_blinking_menuitem)
-
-        hue_lamps_menuitem = Gtk.MenuItem(label="Hue Lamps")
-        hue_lamps_menuitem.set_tooltip_text("lamp-related")
-        menubar.append(hue_lamps_menuitem)
-
-        menu = Gtk.Menu()
-        hue_lamps_menuitem.set_submenu(menu)
+        self.vbox = Gtk.VBox(spacing=10)
 
         for lamp in lamp_dict.values():
-            self.lamp_menuitem = Gtk.MenuItem(label=lamp)
-            self.lamp_menuitem.connect("activate", self.lamp_menuitem_activated, lamp)
-            menu.append(self.lamp_menuitem)
+            hl_obj = globals()[lamp]
+
+            label_lamp = Gtk.Label()
+            label_lamp.props.halign = Gtk.Align.START
+            label_lamp.set_text(lamp)
+
+            on_off_switch = Gtk.Switch()
+            on_off_switch.props.valign = Gtk.Align.CENTER
+            on_off_switch.props.halign = Gtk.Align.START
+            on_off_switch.set_tooltip_text("Off <> On")
+            if hl_obj.on_off_state() == "on":
+                on_off_switch.set_active(True)
+            else:
+                on_off_switch.set_active(False)
+            on_off_switch.connect("notify::active", self.on_off_switch_activated, lamp)
+
+            #color_button = Gtk.ColorButton()
+
+            label_mir = Gtk.Label()
+            label_mir.set_text("mired")
+
+            mir = Gtk.Adjustment(value=326, lower=153, upper=500, step_increment=20, page_increment=20, page_size=0)
+
+            mir_spinbutton = Gtk.SpinButton(adjustment=mir)
+
+            mir_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=mir)
+            mir_scale.set_value_pos(Gtk.PositionType.RIGHT)
+            mir_scale.set_value(hl_obj.mired_get())
+            mir_scale.set_digits(0)
+            mir_scale.set_hexpand(True)
+            mir_scale.set_vexpand(False)
+            mir_scale.connect("value-changed", self.mir_scale_moved, hl_obj)
 
 
-        self.on_off_switch = Gtk.Switch()
-        self.on_off_switch_set_state()
-        self.on_off_switch.set_tooltip_text("Off <> On")
-        self.on_off_switch.connect("notify::active", self.on_off_switch_activated)
+            label_bri = Gtk.Label()
+            label_bri.set_text("brightness")
 
-        self.label_mir = Gtk.Label()
-        self.label_mir.set_text("mired 153-500")
+            bri = Gtk.Adjustment(value=126, lower=1, upper=254, step_increment=10, page_increment=10, page_size=0)
 
-        mir = Gtk.Adjustment(value=326, lower=153, upper=500, step_increment=20, page_increment=20, page_size=0)
+            bri_spinbutton = Gtk.SpinButton(adjustment=bri)
 
-        self.mir_spinbutton = Gtk.SpinButton(adjustment=mir)
+            bri_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=bri)
+            bri_scale.set_value_pos(Gtk.PositionType.RIGHT)
+            bri_scale.set_value(hl_obj.brightness_get())
+            bri_scale.set_digits(0)
+            bri_scale.set_hexpand(True)
+            bri_scale.set_vexpand(False)
+            bri_scale.connect("value-changed", self.bri_scale_moved, hl_obj)
 
-        self.mir_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=mir)
-        self.mir_scale.set_value_pos(Gtk.PositionType.BOTTOM)
-        self.mir_scale_set_state()
-        self.mir_scale.set_digits(0)
-        self.mir_scale.set_hexpand(True)
-        self.mir_scale.set_vexpand(False)
-        self.mir_scale.connect("value-changed", self.mir_scale_moved)
+            grid = Gtk.Grid()
+            grid.set_column_homogeneous(True)  # c  r  hs vs
+            #grid.set_column_spacing(40)
+            grid.attach(label_lamp,               0, 0, 1, 1)
+            grid.attach(on_off_switch,            0, 1, 1, 1)
+            grid.attach(label_mir,                1, 0, 1, 1)
+            grid.attach(mir_scale,                2, 0, 1, 1)
+            grid.attach(label_bri,                1, 1, 1, 1)
+            grid.attach(bri_scale,                2, 1, 1, 1)
 
+            self.vbox.pack_start(grid, True, True, 0)
+            
+        self.add(self.vbox)
 
-        self.label_bri = Gtk.Label()
-        self.label_bri.set_text("brightness 1-254")
-
-        bri = Gtk.Adjustment(value=126, lower=1, upper=254, step_increment=10, page_increment=10, page_size=0)
-
-        self.bri_spinbutton = Gtk.SpinButton(adjustment=bri)
-
-        self.bri_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=bri)
-        self.bri_scale.set_value_pos(Gtk.PositionType.BOTTOM)
-        self.bri_scale_set_state()
-        self.bri_scale.set_digits(0)
-        self.bri_scale.set_hexpand(True)
-        self.bri_scale.set_vexpand(False)
-        self.bri_scale.connect("value-changed", self.bri_scale_moved)
-
-
-        grid = Gtk.Grid()
-        grid.set_row_spacing(10)
-        grid.set_row_homogeneous(False)    
-        grid.set_column_homogeneous(False)  # c  r  hs vs
-        grid.attach(menubar,                  0, 0, 3, 1)
-        grid.attach(self.on_off_switch,       2, 1, 1, 1)
-        grid.attach(self.label_mir,           1, 1, 1, 1)
-        grid.attach(self.mir_spinbutton,      0, 2, 1, 1)
-        grid.attach(self.mir_scale,           1, 2, 1, 1)
-        grid.attach(self.label_bri,           1, 3, 1, 1)
-        grid.attach(self.bri_spinbutton,      0, 4, 1, 1)
-        grid.attach(self.bri_scale,           1, 4, 1, 1)
-        self.add(grid)
-
-    def lamp_menuitem_activated(self, widget, lamp):
-        hl_obj = globals()[lamp]
-        MiredWindow(hl_obj)    
-        BrightnessWindow(hl_obj)    
-
-    def quit_menuitem_selected(self, quit_menuitem):
+    def quit_menuitem_selected(self, widget):
         app.quit()
 
-    def ping_menuitem_selected(self, ping_menuitem):
-        if self.ping_menuitem:
-            for lamp in lamp_dict.values():
-                hl_obj = globals()[lamp]
-                hl_obj.alert_set(1)
+    def on_off_switch_activated(self, widget, active, lamp):
+        hl_obj = globals()[lamp]
+        if widget.get_active():
+            hl_obj.on_off_switch(1)
+        else:
+            hl_obj.on_off_switch(0)
 
-    def blink_menuitem_selected(self, blink_menuitem):
-        if self.blink_menuitem:
-            for lamp in lamp_dict.values():
-                hl_obj = globals()[lamp]
-                hl_obj.alert_set(2)
-
-    def stop_blinking_menuitem_selected(self, stop_blinking_menuitem):
-        if self.stop_blinking_menuitem:
-            for lamp in lamp_dict.values():
-                hl_obj = globals()[lamp]
-                hl_obj.alert_set(0)
-
-    def mir_menuitem_selected(self, widget):
-        for lamp in lamp_dict.values():
-            hl_obj = globals()[lamp]
-            MiredWindow(hl_obj)    
-
-    def bri_menuitem_selected(self, widget):
-        for lamp in lamp_dict.values():
-            hl_obj = globals()[lamp]
-            BrightnessWindow(hl_obj)    
-
-    def on_off_switch_set_state(self):
-        for lamp in lamp_dict.values():
-            hl_obj = globals()[lamp]
-            if hl_obj.on_off_state() == "on":
-                self.on_off_switch.set_active(True)
-            else:
-                self.on_off_switch.set_active(False)
-
-    def on_off_switch_activated(self, switch, active):
-        for lamp in lamp_dict.values():
-            hl_obj = globals()[lamp]
-            if self.on_off_switch.get_active():
-                hl_obj.on_off_switch(1)
-            else:
-                hl_obj.on_off_switch(0)
-
-    def mir_scale_set_state(self):
-        for lamp in lamp_dict.values():
-            hl_obj = globals()[lamp]
-            val = hl_obj.mired_get()
-            self.mir_scale.set_value(val)
-
-    def mir_scale_moved(self, mir_scale):
-        for lamp in lamp_dict.values():
-            hl_obj = globals()[lamp]
+    def mir_scale_moved(self, mir_scale, hl_obj):
             hl_obj.mired_set(int(mir_scale.get_value()))
 
-    def bri_scale_set_state(self):
-        for lamp in lamp_dict.values():
-            hl_obj = globals()[lamp]
-            val = hl_obj.brightness_get()
-            self.bri_scale.set_value(val)
-
-    def bri_scale_moved(self, bri_scale):
-        for lamp in lamp_dict.values():
-            hl_obj = globals()[lamp]
+    def bri_scale_moved(self, bri_scale, hl_obj):
             hl_obj.brightness_set(int(bri_scale.get_value()))
 
+    def hue_button_clicked(self, widget):
+        AdminWindow()
 
-class MiredWindow:
+class AdminWindow(Gtk.Window):
 
-    def __init__(self, hl_obj):
-        
-        self.hl_obj = hl_obj
-        self.mir_window = Gtk.Window()
-        self.mir_window.set_title("Philips Hue Drive: set %s mired" % self.hl_obj.name_get()) 
-        self.mir_window.set_default_size(400, 100)
-        self.mir_window.set_border_width(10)
-        #self.mir_window.set_position(Gtk.WindowPosition.CENTER)
-        #self.mir_window.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
-        #self.mir_window.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
-        #self.mir_window.set_position(Gtk.WindowPosition.MOUSE)
-        #self.mir_window.set_position(Gtk.WindowPosition.NONE)
+    def __init__(self):
 
-        self.label_mir = Gtk.Label()
-        self.label_mir.set_text("Set %s mired: 153-500" % self.hl_obj.name_get())
+        Gtk.Window.__init__(self)
+        self.set_border_width(10)
+        self.set_position(Gtk.WindowPosition.MOUSE)
 
-        mir = Gtk.Adjustment(value=336, lower=153, upper=500, step_increment=10, page_increment=10, page_size=0)
+        self.hb = Gtk.HeaderBar()
+        self.hb.set_show_close_button(True)
+        self.hb.props.title = "Phlips Hue Drive: Admin"
+        self.set_titlebar(self.hb)
 
-        self.mir_spinbutton = Gtk.SpinButton(adjustment=mir)
+        hue_button = Gtk.Button()
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale("/home/walter/bluetooth/hue/hue_ble_gtk/bulb_icon.jpg", 40, 40, preserve_aspect_ratio=True)
+        image = Gtk.Image.new_from_pixbuf(pixbuf)
+        hue_button.add(image)
+        self.hb.pack_start(hue_button)
 
-        self.mir_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=mir)
-        self.mir_scale.set_value_pos(Gtk.PositionType.BOTTOM)
-        self.mir_scale_set_state()
-        self.mir_scale.set_digits(0)
-        self.mir_scale.set_hexpand(True)
-        self.mir_scale.set_vexpand(False)
-        self.mir_scale.connect("value-changed", self.mir_scale_get_state)
+        self.show_all()
 
 
-        self.mir_grid = Gtk.Grid()
-        self.mir_grid.set_row_spacing(10)
-        self.mir_grid.set_row_homogeneous(False)
-        self.mir_grid.attach(self.label_mir,           0, 0, 2, 1)
-        self.mir_grid.attach(self.mir_spinbutton,      0, 1, 1, 1)
-        self.mir_grid.attach(self.mir_scale,           1, 1, 1, 1)
-
-        self.mir_window.add(self.mir_grid)
-
-        self.mir_window.show_all()
-
-    def mir_scale_get_state(self, widget):
-        self.hl_obj.mired_set(int(widget.get_value()))
-
-    def mir_scale_set_state(self):
-        self.mir_scale.set_value(self.hl_obj.mired_get())
-
-
-class BrightnessWindow:
-
-    def __init__(self, hl_obj):
-        
-        self.hl_obj = hl_obj
-        self.bri_window = Gtk.Window()
-        self.bri_window.set_title("Philips Hue Drive: set %s brightness" % self.hl_obj.name_get()) 
-        self.bri_window.set_default_size(400, 100)
-        self.bri_window.set_border_width(10)
-        #self.bri_window.set_decorated(False)
-        #self.bri_window.move(400, 600)
-        #self.bri_window.set_position(Gtk.WindowPosition.CENTER)
-        #self.bri_window.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
-        #self.bri_window.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
-        #self.bri_window.set_position(Gtk.WindowPosition.MOUSE)
-        #self.bri_window.set_position(Gtk.WindowPosition.NONE)
-
-        self.label_bri = Gtk.Label()
-        self.label_bri.set_text("Set %s brightness: 1-254" % self.hl_obj.name_get())
-
-        bri = Gtk.Adjustment(value=126, lower=1, upper=254, step_increment=10, page_increment=10, page_size=0)
-
-        self.bri_spinbutton = Gtk.SpinButton(adjustment=bri)
-
-        self.bri_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=bri)
-        self.bri_scale.set_value_pos(Gtk.PositionType.BOTTOM)
-        self.bri_scale_set_state()
-        self.bri_scale.set_digits(0)
-        self.bri_scale.set_hexpand(True)
-        self.bri_scale.set_vexpand(False)
-        self.bri_scale.connect("value-changed", self.bri_scale_get_state)
-
-
-        self.bri_grid = Gtk.Grid()
-        self.bri_grid.set_row_spacing(10)
-        self.bri_grid.set_row_homogeneous(False)
-        self.bri_grid.attach(self.label_bri,           0, 0, 2, 1)
-        self.bri_grid.attach(self.bri_spinbutton,      0, 1, 1, 1)
-        self.bri_grid.attach(self.bri_scale,           1, 1, 1, 1)
-        self.bri_window.add(self.bri_grid)
-
-        self.bri_window.show_all()
-
-    def bri_scale_get_state(self, widget):
-        self.hl_obj.brightness_set(int(widget.get_value()))
-
-    def bri_scale_set_state(self):
-        self.bri_scale.set_value(self.hl_obj.brightness_get())
 
 class MyApplication(Gtk.Application):
 
@@ -326,12 +193,6 @@ class MyApplication(Gtk.Application):
 app = MyApplication()
 exit_status = app.run(sys.argv)
 sys.exit(exit_status)
-
-
-
-
-
-
 
 
 
