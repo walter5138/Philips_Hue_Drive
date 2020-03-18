@@ -26,5 +26,7 @@ lamp_dict
 #print(lamp_dict)
 
 #lamp_dict = {'D8_3D_2A_15_BE_EE': 'lamp_kitchen', 'C3_95_FE_4E_96_7A': 'lamp_livingroom', 'E0_B0_D8_EC_C7_66': 'lamp_homeoffice'}
+#lamp_dict = {'D8_3D_2A_15_BE_EE': 'lamp_kitchen', 'E0_B0_D8_EC_C7_66': 'lamp_homeoffice'}
+#lamp_dict = {'D8_3D_2A_15_BE_EE': 'lamp_kitchen', 'C3_95_FE_4E_96_7A': 'lamp_livingroom'}
 #lamp_dict = {'C3_95_FE_4E_96_7A': 'lamp_livingroom', 'E0_B0_D8_EC_C7_66': 'lamp_homeoffice'}
 #lamp_dict = {'E0_B0_D8_EC_C7_66': 'lamp_homeoffice'}
