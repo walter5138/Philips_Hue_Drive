@@ -23,7 +23,7 @@ class MainWindow(Gtk.ApplicationWindow):
         
         self.hb = Gtk.HeaderBar()
         self.hb.set_show_close_button(True)
-        self.hb.props.title = "Phlips Hue Drive"
+        self.hb.props.title = "Philips Hue Drive"
         self.set_titlebar(self.hb)
 
         hue_button = Gtk.MenuButton()
@@ -165,7 +165,7 @@ class AdminWindow(Gtk.Window):
 
         self.hb = Gtk.HeaderBar()
         self.hb.set_show_close_button(True)
-        self.hb.props.title = "Phlips Hue Drive: Admin"
+        self.hb.props.title = "Philips Hue Drive: Admin"
         self.set_titlebar(self.hb)
 
         hue_button = Gtk.Button()
