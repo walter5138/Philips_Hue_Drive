@@ -13,11 +13,11 @@ for obj_paths, obj_dict in m_objects.items():
     if "org.bluez.Device1" in obj_dict.keys():
         for interface, properties in obj_dict.items():
             if "Hue Lamp" in properties.values():
-                for property, value in properties.items():
-                    if property == "Address":
+                for prop, value in properties.items():
+                    if prop == "Address":
                         v = str(value)
                         x = v.replace(":", "_")
-                    if property == "Alias":
+                    if prop == "Alias":
                         y = str(value)
                 lamp_dict[x] = y 
 
