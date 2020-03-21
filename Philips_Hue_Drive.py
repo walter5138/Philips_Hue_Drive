@@ -5,7 +5,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GdkPixbuf 
 from hue_config import lamp_dict
-from hue_class import HueLamp
+from hue_dbus_api import HueLamp
 
 for a, n in lamp_dict.items():
     globals()[n] = HueLamp(a, n)
@@ -157,20 +157,6 @@ class MainWindow(Gtk.ApplicationWindow):
             lamp_menu = Gtk.Menu()
             lamp_menu_button.set_popup(lamp_menu)
 
-            admin_menu_item = Gtk.MenuItem(label="Hue Admin")
-            lamp_menu.append(admin_menu_item)
-
-            admin_submenu = Gtk.Menu()
-            admin_menu_item.set_submenu(admin_submenu)
-        
-            menuitem = Gtk.MenuItem(label="set bulb name")
-            admin_submenu.append(menuitem)
-
-            transitiontime_cmi = Gtk.CheckMenuItem(label="transitiontime")
-            transitiontime_cmi.connect("activate", self.transitiontime_cmi_selected, hl_obj, dynamic_grid, tra_label, tra_scale)
-            admin_submenu.append(transitiontime_cmi)
-
-
             fun_menu_item = Gtk.MenuItem(label="Hue Fun")
             lamp_menu.append(fun_menu_item)
 
@@ -187,6 +173,18 @@ class MainWindow(Gtk.ApplicationWindow):
             brightness_cmi.connect("activate", self.brightness_cmi_selected, hl_obj, dynamic_grid, bri_label, bri_scale, on_off_switch, lamp_menu_button)
             brightness_cmi.set_active(True)
             fun_submenu.append(brightness_cmi)
+            admin_menu_item = Gtk.MenuItem(label="Hue Admin")
+            fun_submenu.append(admin_menu_item)
+
+            admin_submenu = Gtk.Menu()
+            admin_menu_item.set_submenu(admin_submenu)
+        
+            menuitem = Gtk.MenuItem(label="set bulb name")
+            admin_submenu.append(menuitem)
+            transitiontime_cmi = Gtk.CheckMenuItem(label="transitiontime")
+            transitiontime_cmi.connect("activate", self.transitiontime_cmi_selected, hl_obj, dynamic_grid, tra_label, tra_scale)
+            admin_submenu.append(transitiontime_cmi)
+
 
             lamp_menu.show_all()
 
