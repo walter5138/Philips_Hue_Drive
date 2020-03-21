@@ -94,7 +94,7 @@ class MainWindow(Gtk.ApplicationWindow):
             col_label = Gtk.Label()
             col_label.set_text("color")
 
-            col_adjust = Gtk.Adjustment(value=326, lower=153, upper=500, step_increment=20, page_increment=20, page_size=0)
+            col_adjust = Gtk.Adjustment(value=0, lower=0, upper=5, step_increment=1, page_increment=1, page_size=0)
 
             col_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=col_adjust)
             col_scale.set_value_pos(Gtk.PositionType.RIGHT)
@@ -102,7 +102,7 @@ class MainWindow(Gtk.ApplicationWindow):
             col_scale.set_digits(0)
             col_scale.set_hexpand(True)
             col_scale.set_vexpand(False)
-            #col_scale.connect("value-changed", self.mir_scale_moved, hl_obj)
+            col_scale.connect("value-changed", self.col_scale_moved, hl_obj)
 
 
             bri_label = Gtk.Label()
@@ -149,7 +149,6 @@ class MainWindow(Gtk.ApplicationWindow):
             on_off_switch.connect("notify::active", self.on_off_switch_activated, hl_obj)
 
             lamp_menu_button = Gtk.MenuButton()
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale("/home/walter/bluetooth/hue/hue_ble_gtk/bulb_icon.jpg", 28, 28, preserve_aspect_ratio=True)
             pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(os.path.join(pwd, "bulb_icon.jpg"), 28, 28, preserve_aspect_ratio=True)
             image = Gtk.Image.new_from_pixbuf(pixbuf)
             lamp_menu_button.add(image)
@@ -203,7 +202,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def lamp_dict_mi_selected(self, widget):
         message_dialog = Gtk.MessageDialog(parent=self, modal=True, destroy_with_parent=True, message_type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.CLOSE, text="This shows the lamp_dict.")
-        #message_dialog.set_decorated(False)
+        message_dialog.set_decorated(False)
         message_dialog.set_title("lamp_dict")
         message_dialog.format_secondary_text("The lamp_dict shows the Bulbs recognized \nby the Philips Hue Drive App.\n\n%s" % str(lamp_dict))
         message_dialog.connect("response", self.dialog_response)
@@ -220,6 +219,27 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def mir_scale_moved(self, mir_scale, hl_obj):
         hl_obj.mired_set(int(mir_scale.get_value()))
+
+    def col_scale_moved(self, col_scale, hl_obj):
+        WHITE   = (0x01, 0x55, 0x55, 0x55)
+        RED     = (0x01, 0xfe, 0x00, 0x01)
+        GREEN   = (0x01, 0x00, 0x01, 0xfe)
+        BLUE    = (0x01, 0x00, 0xfe, 0x01)
+        YELLOW  = (0x01, 0x7f, 0x00, 0x7f)
+        CYAN    = (0x01, 0x00, 0x7f, 0x7f)
+        MAGENTA = (0x01, 0x7f, 0x7f, 0x00)
+        if col_scale.get_value() == 0:
+            hl_obj.color_set(RED)
+        elif col_scale.get_value() == 1:
+            hl_obj.color_set(GREEN)
+        elif col_scale.get_value() == 2:
+            hl_obj.color_set(BLUE)
+        elif col_scale.get_value() == 3:
+            hl_obj.color_set(YELLOW)
+        elif col_scale.get_value() == 4:
+            hl_obj.color_set(CYAN)
+        elif col_scale.get_value() == 5:
+            hl_obj.color_set(MAGENTA)
 
     def bri_scale_moved(self, bri_scale, hl_obj):
         hl_obj.brightness_set(int(bri_scale.get_value()))
