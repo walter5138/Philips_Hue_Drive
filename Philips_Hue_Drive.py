@@ -21,7 +21,6 @@ class MainWindow(Gtk.ApplicationWindow):
         self.set_border_width(10)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.settings = Gtk.Settings.get_default()
-        self.settings.set_property("gtk-application-prefer-dark-theme", True)
         
         self.hb = Gtk.HeaderBar()
         self.hb.set_show_close_button(True)
@@ -36,6 +35,23 @@ class MainWindow(Gtk.ApplicationWindow):
         hue_button.set_popup(main_menu)
         self.hb.pack_start(hue_button)
 
+
+        fun_menu_item = Gtk.MenuItem(label="Hue Fun")
+        main_menu.append(fun_menu_item)
+
+        fun_submenu = Gtk.Menu()
+        fun_menu_item.set_submenu(fun_submenu)
+
+        dark_theme_cmi = Gtk.CheckMenuItem(label="dark-theme")
+        dark_theme_cmi.connect("activate", self.dark_theme_cmi_selected)
+        dark_theme_cmi.set_active(True)
+        fun_submenu.append(dark_theme_cmi)
+        menuitem = Gtk.MenuItem(label="pass")
+        fun_submenu.append(menuitem)
+        menuitem = Gtk.MenuItem(label="pass")
+        fun_submenu.append(menuitem)
+        menuitem = Gtk.MenuItem(label="pass")
+        fun_submenu.append(menuitem)
 
         admin_menu_item = Gtk.MenuItem(label="Hue Admin")
         main_menu.append(admin_menu_item)
@@ -53,21 +69,6 @@ class MainWindow(Gtk.ApplicationWindow):
         admin_submenu.append(quit_mi)
 
 
-        fun_menu_item = Gtk.MenuItem(label="Hue Fun")
-        main_menu.append(fun_menu_item)
-
-        fun_submenu = Gtk.Menu()
-        fun_menu_item.set_submenu(fun_submenu)
-
-        menuitem = Gtk.MenuItem(label="pass")
-        fun_submenu.append(menuitem)
-        menuitem = Gtk.MenuItem(label="pass")
-        fun_submenu.append(menuitem)
-        menuitem = Gtk.MenuItem(label="pass")
-        fun_submenu.append(menuitem)
-        menuitem = Gtk.MenuItem(label="pass")
-        fun_submenu.append(menuitem)
-
         main_menu.show_all()
         
         self.vbox = Gtk.VBox(spacing=10)
@@ -77,9 +78,6 @@ class MainWindow(Gtk.ApplicationWindow):
             
             dynamic_grid = Gtk.Grid()
             
-            mir_label = Gtk.Label()
-            mir_label.set_text("mired")
-
             mir_adjust = Gtk.Adjustment(value=326, lower=153, upper=500, step_increment=20, page_increment=20, page_size=0)
 
             mir_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=mir_adjust)
@@ -91,10 +89,7 @@ class MainWindow(Gtk.ApplicationWindow):
             mir_scale.connect("value-changed", self.mir_scale_moved, hl_obj)
 
 
-            col_label = Gtk.Label()
-            col_label.set_text("color")
-
-            col_adjust = Gtk.Adjustment(value=0, lower=0, upper=5, step_increment=1, page_increment=1, page_size=0)
+            col_adjust = Gtk.Adjustment(value=3, lower=0, upper=5, step_increment=1, page_increment=1, page_size=0)
 
             col_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=col_adjust)
             col_scale.set_value_pos(Gtk.PositionType.RIGHT)
@@ -148,6 +143,11 @@ class MainWindow(Gtk.ApplicationWindow):
                 on_off_switch.set_active(False)
             on_off_switch.connect("notify::active", self.on_off_switch_activated, hl_obj)
 
+            mir_col_tb = Gtk.ToggleButton()
+            mir_col_tb.connect("toggled", self.mir_col_tb_selected, hl_obj, dynamic_grid, lamp_label, mir_col_tb, mir_scale, col_scale)
+            mir_col_tb.set_active(True)
+
+
             lamp_menu_button = Gtk.MenuButton()
             pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(os.path.join(pwd, "bulb_icon.jpg"), 28, 28, preserve_aspect_ratio=True)
             image = Gtk.Image.new_from_pixbuf(pixbuf)
@@ -157,33 +157,11 @@ class MainWindow(Gtk.ApplicationWindow):
             lamp_menu = Gtk.Menu()
             lamp_menu_button.set_popup(lamp_menu)
 
-            fun_menu_item = Gtk.MenuItem(label="Hue Fun")
-            lamp_menu.append(fun_menu_item)
-
-            fun_submenu = Gtk.Menu()
-            fun_menu_item.set_submenu(fun_submenu)
-
-            mired_rmi= Gtk.RadioMenuItem(label="mired")
-            mired_rmi.connect("toggled", self.mired_rmi_selected, hl_obj, dynamic_grid, lamp_label, mir_label, mir_scale, col_label, col_scale)
-            mired_rmi.set_active(True)
-            fun_submenu.append(mired_rmi)
-            color_rmi= Gtk.RadioMenuItem(label="color", group=mired_rmi)
-            fun_submenu.append(color_rmi)
-            brightness_cmi = Gtk.CheckMenuItem(label="brightness")
-            brightness_cmi.connect("activate", self.brightness_cmi_selected, hl_obj, dynamic_grid, bri_label, bri_scale, on_off_switch, lamp_menu_button)
-            brightness_cmi.set_active(True)
-            fun_submenu.append(brightness_cmi)
-            admin_menu_item = Gtk.MenuItem(label="Hue Admin")
-            fun_submenu.append(admin_menu_item)
-
-            admin_submenu = Gtk.Menu()
-            admin_menu_item.set_submenu(admin_submenu)
-        
             menuitem = Gtk.MenuItem(label="set bulb name")
-            admin_submenu.append(menuitem)
+            lamp_menu.append(menuitem)
             transitiontime_cmi = Gtk.CheckMenuItem(label="transitiontime")
             transitiontime_cmi.connect("activate", self.transitiontime_cmi_selected, hl_obj, dynamic_grid, tra_label, tra_scale)
-            admin_submenu.append(transitiontime_cmi)
+            lamp_menu.append(transitiontime_cmi)
 
 
             lamp_menu.show_all()
@@ -193,10 +171,21 @@ class MainWindow(Gtk.ApplicationWindow):
             #dynamic_grid.set_row_homogeneous(False)
             #dynamic_grid.set_column_spacing(40)
             #dynamic_grid.set_row_spacing(40)
+            dynamic_grid.attach(on_off_switch,            0, 1, 1, 1)
+            dynamic_grid.attach(lamp_menu_button,         0, 1, 1, 1)
+            dynamic_grid.attach(bri_label,                1, 1, 1, 1)
+            dynamic_grid.attach(bri_scale,                2, 1, 1, 1)
 
             self.vbox.pack_start(dynamic_grid, False, False, 0)
 
         self.add(self.vbox)
+
+    def dark_theme_cmi_selected(self, widget):
+        if widget.get_active():
+            self.settings.set_property("gtk-application-prefer-dark-theme", True)
+        else:
+            self.settings.set_property("gtk-application-prefer-dark-theme", False)
+
 
     def lamp_dict_mi_selected(self, widget):
         message_dialog = Gtk.MessageDialog(parent=self, modal=True, destroy_with_parent=True, message_type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.CLOSE, text="This shows the lamp_dict.")
@@ -219,23 +208,22 @@ class MainWindow(Gtk.ApplicationWindow):
         hl_obj.mired_set(int(mir_scale.get_value()))
 
     def col_scale_moved(self, col_scale, hl_obj):
-        WHITE   = (0x01, 0x55, 0x55, 0x55)
         RED     = (0x01, 0xfe, 0x00, 0x01)
-        GREEN   = (0x01, 0x00, 0x01, 0xfe)
-        BLUE    = (0x01, 0x00, 0xfe, 0x01)
         YELLOW  = (0x01, 0x7f, 0x00, 0x7f)
+        GREEN   = (0x01, 0x00, 0x01, 0xfe)
         CYAN    = (0x01, 0x00, 0x7f, 0x7f)
+        BLUE    = (0x01, 0x00, 0xfe, 0x01)
         MAGENTA = (0x01, 0x7f, 0x7f, 0x00)
         if col_scale.get_value() == 0:
             hl_obj.color_set(RED)
         elif col_scale.get_value() == 1:
-            hl_obj.color_set(GREEN)
-        elif col_scale.get_value() == 2:
-            hl_obj.color_set(BLUE)
-        elif col_scale.get_value() == 3:
             hl_obj.color_set(YELLOW)
-        elif col_scale.get_value() == 4:
+        elif col_scale.get_value() == 2:
+            hl_obj.color_set(GREEN)
+        elif col_scale.get_value() == 3:
             hl_obj.color_set(CYAN)
+        elif col_scale.get_value() == 4:
+            hl_obj.color_set(BLUE)
         elif col_scale.get_value() == 5:
             hl_obj.color_set(MAGENTA)
 
@@ -248,38 +236,24 @@ class MainWindow(Gtk.ApplicationWindow):
     def quit_menuitem_selected(self, widget):
         app.quit()
 
-    def mired_rmi_selected(self, widget, hl_obj, dynamic_grid, lamp_label, mir_label, mir_scale, col_label, col_scale):
+    def mir_col_tb_selected(self, widget, hl_obj, dynamic_grid, lamp_label, mir_col_tb, mir_scale, col_scale):
         if widget.get_active():
+            mir_col_tb.set_label("mired")
             dynamic_grid.remove_row(0)
             dynamic_grid.insert_row(0)
             dynamic_grid.attach(lamp_label,               0, 0, 1, 1)
-            dynamic_grid.attach(mir_label,                1, 0, 1, 1)
+            dynamic_grid.attach(mir_col_tb,               1, 0, 1, 1)
             dynamic_grid.attach(mir_scale,                2, 0, 1, 1)
             dynamic_grid.show_all()
         else:
+            mir_col_tb.set_label("color")
             dynamic_grid.remove_row(0)
             dynamic_grid.insert_row(0)
             dynamic_grid.attach(lamp_label,               0, 0, 1, 1)
-            dynamic_grid.attach(col_label,                1, 0, 1, 1)
+            dynamic_grid.attach(mir_col_tb,               1, 0, 1, 1)
             dynamic_grid.attach(col_scale,                2, 0, 1, 1)
             dynamic_grid.show_all()
 
-    def brightness_cmi_selected(self, widget, hl_obj, dynamic_grid, bri_label, bri_scale, on_off_switch, lamp_menu_button):
-        if widget.get_active():
-            dynamic_grid.remove_row(1)
-            dynamic_grid.insert_row(1)
-            dynamic_grid.attach(on_off_switch,            0, 1, 1, 1)
-            dynamic_grid.attach(lamp_menu_button,         0, 1, 1, 1)
-            dynamic_grid.attach(bri_label,                1, 1, 1, 1)
-            dynamic_grid.attach(bri_scale,                2, 1, 1, 1)
-            dynamic_grid.show_all()
-        else:
-            dynamic_grid.remove_row(1)
-            dynamic_grid.insert_row(1)
-            dynamic_grid.attach(on_off_switch,            0, 1, 1, 1)
-            dynamic_grid.attach(lamp_menu_button,         0, 1, 1, 1)
-            dynamic_grid.show_all()
-            
     def transitiontime_cmi_selected(self, widget, hl_obj, dynamic_grid, tra_label, tra_scale):
         if widget.get_active():
             dynamic_grid.attach(tra_label,                1, 2, 1, 1)
