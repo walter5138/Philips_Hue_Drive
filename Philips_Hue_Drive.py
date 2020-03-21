@@ -10,6 +10,8 @@ from hue_class import HueLamp
 for a, n in lamp_dict.items():
     globals()[n] = HueLamp(a, n)
 
+pwd = os.path.dirname(os.path.abspath(__file__))
+
 class MainWindow(Gtk.ApplicationWindow):
 
     def __init__(self, app):
@@ -27,7 +29,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.set_titlebar(self.hb)
 
         hue_button = Gtk.MenuButton()
-        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale("/home/walter/bluetooth/hue/hue_ble_gtk/bulb_icon.jpg", 40, 40, preserve_aspect_ratio=True)
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(os.path.join(pwd, "bulb_icon.jpg"), 40, 40, preserve_aspect_ratio=True)
         image = Gtk.Image.new_from_pixbuf(pixbuf)
         hue_button.add(image)
         main_menu = Gtk.Menu()
@@ -148,6 +150,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
             lamp_menu_button = Gtk.MenuButton()
             pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale("/home/walter/bluetooth/hue/hue_ble_gtk/bulb_icon.jpg", 28, 28, preserve_aspect_ratio=True)
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(os.path.join(pwd, "bulb_icon.jpg"), 28, 28, preserve_aspect_ratio=True)
             image = Gtk.Image.new_from_pixbuf(pixbuf)
             lamp_menu_button.add(image)
             lamp_menu_button.props.halign = Gtk.Align.START
@@ -267,27 +270,6 @@ class MainWindow(Gtk.ApplicationWindow):
         else:
             dynamic_grid.remove_row(2)
             self.resize(420, 90)
-
-
-
-#    def __init__(self):
-#
-#        Gtk.Window.__init__(self)
-#        self.set_border_width(10)
-#        self.set_position(Gtk.WindowPosition.MOUSE)
-#
-#        self.hb = Gtk.HeaderBar()
-#        self.hb.set_show_close_button(True)
-#        self.hb.props.title = "Philips Hue Drive: Admin"
-#        self.set_titlebar(self.hb)
-#
-#        hue_button = Gtk.Button()
-#        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale("/home/walter/bluetooth/hue/hue_ble_gtk/bulb_icon.jpg", 40, 40, preserve_aspect_ratio=True)
-#        image = Gtk.Image.new_from_pixbuf(pixbuf)
-#        hue_button.add(image)
-#        self.hb.pack_start(hue_button)
-#
-#        self.show_all()
 
 
 
