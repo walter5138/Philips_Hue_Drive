@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import dbus
 import sys, os
 import gi
 gi.require_version('Gtk', '3.0')
@@ -24,7 +25,7 @@ class MainWindow(Gtk.ApplicationWindow):
         
         self.hb = Gtk.HeaderBar()
         self.hb.set_show_close_button(True)
-        self.hb.props.title = "Philips Hue Drive"
+        self.hb.set_title("Philips Hue Drive")
         self.set_titlebar(self.hb)
 
         hue_button = Gtk.MenuButton()
@@ -127,11 +128,18 @@ class MainWindow(Gtk.ApplicationWindow):
             tra_scale.set_vexpand(False)
             tra_scale.connect("value-changed", self.tra_scale_moved, hl_obj)
 
+            
+            bulb_name_entry = Gtk.Entry()
+            bulb_name_entry.set_activates_default(True)
+            bulb_name_entry.set_placeholder_text("Please input a new lamp name:")
+            bulb_name_entry.connect("activate", self.bulb_name_entry_selected, hl_obj)
+
 
 
             lamp_label = Gtk.Label()
             lamp_label.props.halign = Gtk.Align.START
             lamp_label.set_text(lamp)
+            #lamp_label.set_text(hl_obj.name_get())
 
             on_off_switch = Gtk.Switch()
             on_off_switch.props.valign = Gtk.Align.CENTER
@@ -157,11 +165,12 @@ class MainWindow(Gtk.ApplicationWindow):
             lamp_menu = Gtk.Menu()
             lamp_menu_button.set_popup(lamp_menu)
 
-            menuitem = Gtk.MenuItem(label="set bulb name")
-            lamp_menu.append(menuitem)
+            bulb_name_cmi = Gtk.CheckMenuItem(label="set bulb name")
             transitiontime_cmi = Gtk.CheckMenuItem(label="transitiontime")
-            transitiontime_cmi.connect("activate", self.transitiontime_cmi_selected, hl_obj, dynamic_grid, tra_label, tra_scale)
+            transitiontime_cmi.connect("activate", self.transitiontime_cmi_selected, hl_obj, dynamic_grid, tra_label, tra_scale, bulb_name_cmi)
             lamp_menu.append(transitiontime_cmi)
+            bulb_name_cmi.connect("activate", self.bulb_name_cmi_selected, hl_obj, dynamic_grid, bulb_name_entry, transitiontime_cmi)
+            lamp_menu.append(bulb_name_cmi)
 
 
             lamp_menu.show_all()
@@ -169,7 +178,7 @@ class MainWindow(Gtk.ApplicationWindow):
             dynamic_grid.set_border_width(0)
             dynamic_grid.set_column_homogeneous(True)
             #dynamic_grid.set_row_homogeneous(False)
-            #dynamic_grid.set_column_spacing(40)
+            dynamic_grid.set_column_spacing(5)
             #dynamic_grid.set_row_spacing(40)
             dynamic_grid.attach(on_off_switch,            0, 1, 1, 1)
             dynamic_grid.attach(lamp_menu_button,         0, 1, 1, 1)
@@ -233,6 +242,13 @@ class MainWindow(Gtk.ApplicationWindow):
     def tra_scale_moved(self, tra_scale, hl_obj):
         hl_obj.transitiontime_set(int(tra_scale.get_value()))
 
+    def bulb_name_entry_selected(self, widget, hl_obj):
+        name = widget.get_text()
+        properties_lamp = dbus.Interface(dbus.SystemBus().get_object('org.bluez', '/org/bluez/hci0/dev_' + hl_obj.address), 'org.freedesktop.DBus.Properties')
+        properties_lamp.Set("org.bluez.Device1", "Alias", "lamp_" + name)
+        widget.set_text("")
+        #os.execl(sys.executable, sys.executable, * sys.argv) # yes it works, but looking for another way!
+
     def quit_menuitem_selected(self, widget):
         app.quit()
 
@@ -254,8 +270,11 @@ class MainWindow(Gtk.ApplicationWindow):
             dynamic_grid.attach(col_scale,                2, 0, 1, 1)
             dynamic_grid.show_all()
 
-    def transitiontime_cmi_selected(self, widget, hl_obj, dynamic_grid, tra_label, tra_scale):
+    def transitiontime_cmi_selected(self, widget, hl_obj, dynamic_grid, tra_label, tra_scale, bulb_name_cmi):
         if widget.get_active():
+            bulb_name_cmi.set_active(False)
+            dynamic_grid.remove_row(2)
+            dynamic_grid.insert_row(2)
             dynamic_grid.attach(tra_label,                1, 2, 1, 1)
             dynamic_grid.attach(tra_scale,                2, 2, 1, 1)
             dynamic_grid.show_all()
@@ -263,6 +282,19 @@ class MainWindow(Gtk.ApplicationWindow):
             dynamic_grid.remove_row(2)
             self.resize(420, 90)
 
+    def bulb_name_cmi_selected(self, widget, hl_obj, dynamic_grid, bulb_name_entry, transitiontime_cmi):
+        if widget.get_active():
+            hl_obj.alert_set(2)
+            transitiontime_cmi.set_active(False)
+            dynamic_grid.remove_row(2)
+            dynamic_grid.insert_row(2)
+            dynamic_grid.attach(bulb_name_entry,          0, 2, 3, 1)
+            dynamic_grid.show_all()
+                
+        else:
+            dynamic_grid.remove_row(2)
+            hl_obj.alert_set(0)
+            self.resize(420, 90)
 
 
 class MyApplication(Gtk.Application):
