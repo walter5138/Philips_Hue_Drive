@@ -130,9 +130,11 @@ class MainWindow(Gtk.ApplicationWindow):
 
             
             bulb_name_entry = Gtk.Entry()
-            bulb_name_entry.set_activates_default(True)
             bulb_name_entry.set_placeholder_text("Please input a new lamp name:")
-            bulb_name_entry.connect("activate", self.bulb_name_entry_selected, hl_obj)
+            bulb_name_entry.set_max_length(20)
+            bulb_name_entry.connect("activate", self.bulb_name_entry_input, hl_obj)
+            #bulb_name_entry.set_activates_default(True)
+            #bulb_name_entry.grab_focus_without_selecting()
 
 
 
@@ -152,7 +154,7 @@ class MainWindow(Gtk.ApplicationWindow):
             on_off_switch.connect("notify::active", self.on_off_switch_activated, hl_obj)
 
             mir_col_tb = Gtk.ToggleButton()
-            mir_col_tb.connect("toggled", self.mir_col_tb_selected, hl_obj, dynamic_grid, lamp_label, mir_col_tb, mir_scale, col_scale)
+            mir_col_tb.connect("toggled", self.mir_col_tb_toggled, hl_obj, dynamic_grid, lamp_label, mir_col_tb, mir_scale, col_scale)
             mir_col_tb.set_active(True)
 
 
@@ -200,7 +202,7 @@ class MainWindow(Gtk.ApplicationWindow):
         message_dialog = Gtk.MessageDialog(parent=self, modal=True, destroy_with_parent=True, message_type=Gtk.MessageType.INFO, buttons=Gtk.ButtonsType.CLOSE, text="This shows the lamp_dict.")
         message_dialog.set_decorated(False)
         message_dialog.set_title("lamp_dict")
-        message_dialog.format_secondary_text("The lamp_dict shows the Bulbs recognized \nby the Philips Hue Drive App.\n\n%s" % str(lamp_dict))
+        message_dialog.format_secondary_text("The lamp_dict shows the Bulbs recognized\nby the Philips Hue Drive App.\n\n%s" % lamp_dict)
         message_dialog.connect("response", self.dialog_response)
         message_dialog.show()
     def dialog_response(self, widget, response_id):
@@ -242,17 +244,17 @@ class MainWindow(Gtk.ApplicationWindow):
     def tra_scale_moved(self, tra_scale, hl_obj):
         hl_obj.transitiontime_set(int(tra_scale.get_value()))
 
-    def bulb_name_entry_selected(self, widget, hl_obj):
+    def bulb_name_entry_input(self, widget, hl_obj):
         name = widget.get_text()
         properties_lamp = dbus.Interface(dbus.SystemBus().get_object('org.bluez', '/org/bluez/hci0/dev_' + hl_obj.address), 'org.freedesktop.DBus.Properties')
-        properties_lamp.Set("org.bluez.Device1", "Alias", "lamp_" + name)
-        widget.set_text("")
-        #os.execl(sys.executable, sys.executable, * sys.argv) # yes it works, but looking for another way!
+        properties_lamp.Set("org.bluez.Device1", "Alias", name)
+        #properties_lamp.Set("org.bluez.Device1", "Alias", "lamp_" + name)
+        os.execl(sys.executable, sys.executable, *sys.argv) # yes it works, but looking for another way
 
     def quit_menuitem_selected(self, widget):
         app.quit()
 
-    def mir_col_tb_selected(self, widget, hl_obj, dynamic_grid, lamp_label, mir_col_tb, mir_scale, col_scale):
+    def mir_col_tb_toggled(self, widget, hl_obj, dynamic_grid, lamp_label, mir_col_tb, mir_scale, col_scale):
         if widget.get_active():
             mir_col_tb.set_label("mired")
             dynamic_grid.remove_row(0)
@@ -280,7 +282,7 @@ class MainWindow(Gtk.ApplicationWindow):
             dynamic_grid.show_all()
         else:
             dynamic_grid.remove_row(2)
-            self.resize(420, 90)
+            self.resize(380, 90)
 
     def bulb_name_cmi_selected(self, widget, hl_obj, dynamic_grid, bulb_name_entry, transitiontime_cmi):
         if widget.get_active():
@@ -294,7 +296,7 @@ class MainWindow(Gtk.ApplicationWindow):
         else:
             dynamic_grid.remove_row(2)
             hl_obj.alert_set(0)
-            self.resize(420, 90)
+            self.resize(380, 90)
 
 
 class MyApplication(Gtk.Application):
