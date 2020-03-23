@@ -7,7 +7,7 @@ class HueLamp:
         import time
         self.address = address
         self.connect()
-        #time.sleep(2)
+        #time.sleep(4)
         self.name_set(name)
         self.name = self.name_get()
         print('%s = %s, connection state: %s' % (self.address, self.name, self.connection_state()))
@@ -31,7 +31,7 @@ class HueLamp:
         systembus = dbus.SystemBus()
         name_get_handle = dbus.Interface(systembus.get_object('org.bluez', "/org/bluez/hci0/dev_" + self.address + "/service0011/char0014"), 'org.bluez.GattCharacteristic1')
         x = name_get_handle.ReadValue([])
-        return ''.join([str(v) for v in x])
+        return ''.join([chr(v) for v in x])
 
     def name_set(self, name):
         import dbus
@@ -108,7 +108,7 @@ class HueLamp:
         ay = transitiontime_get_handle.ReadValue(dbus.Dictionary([], dbus.Signature('sv')))
 
         #return float(ay[0] / 10)                # ReadValue returns an array of bytes now stored in the variable ay.
-        return int(ay[0])                # ReadValue returns an array of bytes now stored in the variable ay.
+        return int(ay[0])         
                                                 # There is only one item in the array, accessed with ay[0].
                                                 # Return value is in miliseconds. "/10" converts it in seconds,
                                                 # so the return value is, for example, usable in "time.sleep(0.4)".
